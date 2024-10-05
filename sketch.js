@@ -32,10 +32,15 @@ const noseStrokeWeight = 4
 
 // Assets
 let scoreSFX
+let music
 
 function preload () {
   soundFormats('mp3')
-  scoreSFX = loadSound('./assets/SFXfinish.mp3')
+  // scoreSFX = loadSound('./assets/SFXfinish.mp3')
+  music = loadSound('./assets/music.mp3')
+  scoreSFX = loadSound('./assets/SFXmistake.mp3')
+  music.setVolume(0.25)
+  scoreSFX.setVolume(1)
 }
 function setup () {
   cvs = createCanvas(640, 480)
@@ -94,7 +99,8 @@ function handlePos () {
     let d = dist(noseX, noseY, circleX, circleY)
     if (d < circleDiameter / 2) {
       hasReachedStartingPoint = true
-      scoreSFX.play()
+      // scoreSFX.play()
+      music.loop()
     }
   }
 
@@ -203,42 +209,37 @@ function ResetGame () {
 function modelReady () {
   console.log('Model ready!')
 }
-
-// Square class definition
 class Square {
   constructor (x, y, w) {
-    this.x = x // Start position
-    this.y = y // Y position
-    this.width = w // Width of the square
+    this.x = x
+    this.y = y
+    this.width = w
   }
 
   update () {
-    this.x -= squareSpeed // Move square left
+    this.x -= squareSpeed
   }
 
   display () {
     fill(255)
     noStroke()
-    rect(this.x, this.y, this.width, this.width) // Draw square
+    rect(this.x, this.y, this.width, this.width)
   }
 }
 
-// Function to randomly instantiate squares
 function instantiateSquare () {
-  if (frameCount % squareInterval === 0) { // Adjust this value to control frequency
+  if (frameCount % squareInterval === 0) {
     squares.push(new Square(width, random(height - squareWidth), squareWidth))
   }
 }
 
-// Function to update and display squares
 function drawSquares () {
-  instantiateSquare() // Call the instantiate function
+  instantiateSquare()
 
   for (let i = squares.length - 1; i >= 0; i--) {
     squares[i].update()
     squares[i].display()
 
-    // Remove squares that have gone off-screen
     if (squares[i].x < -squareWidth) {
       squares.splice(i, 1)
     }
