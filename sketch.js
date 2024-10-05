@@ -27,9 +27,9 @@ const squareInterval = 45
 
 // Nose Point
 let noseHue = 210
-const noseSaturation = 100
-const noseLightness = 50
-const noseStrokeWeight = 4
+let noseSaturation = 100
+let noseLightness = 50
+let noseStrokeWeight = 6
 
 // Assets
 let scoreSFX
@@ -129,13 +129,6 @@ function drawText () {
   if (scoreElement) {
     scoreElement.html('Score: ' + score)
   }
-
-  let debugElement = select('#debug')
-  if (debugElement) {
-    debugElement.html(`
-      Nose Position: (${noseX.toFixed(2)}, ${noseY.toFixed(2)})
-    `)
-  }
 }
 
 function drawStartingCircle () {
@@ -199,6 +192,15 @@ function keyPressed () {
   if (key === 'm') {
     enableHorizontalMirror = !enableHorizontalMirror
   }
+
+  // - and + to adjust nose stroke weight
+  if (key === '-' && noseStrokeWeight > 1) {
+    noseStrokeWeight--
+  }
+
+  if (key === '=' && noseStrokeWeight < 10) {
+    noseStrokeWeight++
+  }
 }
 
 function togglePause () {
@@ -230,6 +232,22 @@ function ResetGame () {
 function onModelLoaded () {
   console.log('Model loaded!')
   isModelLoaded = true
+
+  // for html #score and #keymap, rm class .hide, add class .show
+  let scoreElement = select('#score')
+  if (scoreElement) {
+    scoreElement.class('show')
+  }
+
+  let keymapElement = select('#keymap')
+  if (keymapElement) {
+    keymapElement.class('show')
+  }
+
+  let loaddingElement = select('#loading')
+  if (loaddingElement) {
+    loaddingElement.class('hide')
+  }
 }
 class Square {
   constructor (x, y, w) {
