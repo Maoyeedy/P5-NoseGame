@@ -11,6 +11,7 @@ let pNoseY = 0
 let enableHorizontalMirror = true
 let hasReachedStartingPoint = false
 let pauseGame = false
+let isModelLoaded = false
 
 // Starting
 const circleDiameter = 40
@@ -55,7 +56,7 @@ function setup () {
   circleY = height / 2
 
   // Create a new poseNet method with a single detection
-  poseNet = ml5.poseNet(video, modelReady)
+  poseNet = ml5.poseNet(video, onModelLoaded)
   poseNet.on('pose', function (results) {
     poses = results
   })
@@ -65,7 +66,6 @@ function setup () {
 }
 
 function draw () {
-  // Mirror video if needed
   if (enableHorizontalMirror) {
     push()
     scale(-1, 1)
@@ -75,19 +75,20 @@ function draw () {
     image(video, 0, 0, width, height)
   }
 
-  // Continue drawing the video feed regardless of pause state
+  if (!isModelLoaded) return
+
   image(pg, 0, 0, width, height)
+  drawText()
 
-  // Pause game elements but keep video feed
-  if (!pauseGame) {
-    if (!hasReachedStartingPoint) drawStartingCircle()
-    else drawSquares()
+  if (pauseGame) return
 
-    drawKeypoints()
-    handlePos()
-  }
+  if (!hasReachedStartingPoint)
+    drawStartingCircle()
+  else
+    drawSquares()
 
-  drawText() // Always display text, even when paused
+  drawKeypoints()
+  handlePos()
 }
 
 function handlePos () {
@@ -119,11 +120,17 @@ function handlePos () {
 }
 
 function drawText () {
-  select('#score').html('Score: ' + score)
+  let scoreElement = select('#score')
+  if (scoreElement) {
+    scoreElement.html('Score: ' + score)
+  }
 
-  select('#debug').html(`
-    Nose Position: (${noseX.toFixed(2)}, ${noseY.toFixed(2)})
-  `)
+  let debugElement = select('#debug')
+  if (debugElement) {
+    debugElement.html(`
+      Nose Position: (${noseX.toFixed(2)}, ${noseY.toFixed(2)})
+    `)
+  }
 }
 
 function drawStartingCircle () {
@@ -206,8 +213,9 @@ function ResetGame () {
   pg.clear()
 }
 
-function modelReady () {
-  console.log('Model ready!')
+function onModelLoaded () {
+  console.log('Model loaded!')
+  isModelLoaded = true
 }
 class Square {
   constructor (x, y, w) {
