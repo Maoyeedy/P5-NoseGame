@@ -1,0 +1,1 @@
+Idea from http://bugartbysteven.com/art-for-sale/

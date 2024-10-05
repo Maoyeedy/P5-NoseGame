@@ -6,14 +6,40 @@ let noseX = 0 // Initialize nose positions
 let noseY = 0
 let pNoseX = 0 // Initialize previous nose positions
 let pNoseY = 0
-let enableHorizontalMirror = false // Set to true for mirroring
-let stopDrawingKeypoints = false // Control variable to stop drawing keypoints
-let circleX = 160
-let circleY // Will be initialized in setup
-const circleRadius = 25 // Half of ellipse width (50 / 2)
 
+// Settings
+let enableHorizontalMirror = true
+let hasReachedStartingPoint = false
+let pauseGame = false
+
+// Starting
+const circleDiameter = 40
+let circleX = 160
+let circleY
+
+// Squares
+let score = 0
+let squares = []
+const squareSpeed = 3
+const squareWidth = 40
+const squareInterval = 45
+
+// Nose Point
+let noseHue = 210
+const noseSaturation = 100
+const noseLightness = 50
+const noseStrokeWeight = 4
+
+// Assets
+let scoreSFX
+
+function preload () {
+  soundFormats('mp3')
+  scoreSFX = loadSound('./assets/SFXfinish.mp3')
+}
 function setup () {
   cvs = createCanvas(640, 480)
+
   video = createCapture(VIDEO)
   video.size(width, height)
 
@@ -34,81 +60,107 @@ function setup () {
 }
 
 function draw () {
+  // Mirror video if needed
   if (enableHorizontalMirror) {
     push()
     scale(-1, 1)
     image(video, -width, 0, width, height)
-    image(pg, -width, 0, width, height)
     pop()
   } else {
     image(video, 0, 0, width, height)
-    image(pg, 0, 0, width, height)
   }
 
-  drawCircleAndText()
+  // Continue drawing the video feed regardless of pause state
+  image(pg, 0, 0, width, height)
 
-  if (!stopDrawingKeypoints) {
+  // Pause game elements but keep video feed
+  if (!pauseGame) {
+    if (!hasReachedStartingPoint) drawStartingCircle()
+    else drawSquares()
+
     drawKeypoints()
+    handlePos()
   }
 
-  drawDebugText() // Call the debug text function
+  drawText() // Always display text, even when paused
 }
 
-function drawDebugText () {
-  push()
-  fill(255)
-  textAlign(CENTER)
-  textSize(16)
-  text(`Nose Position: (${noseX.toFixed(2)}, ${noseY.toFixed(2)})`, width / 2, 30)
-  text(`Circle Position: (${circleX}, ${circleY})`, width / 2, 50)
-  pop()
+function handlePos () {
+  // Check distance to the circle
+  if (!hasReachedStartingPoint) checkCircle()
+  else checkSquares()
+
+  function checkCircle () {
+    let d = dist(noseX, noseY, circleX, circleY)
+    if (d < circleDiameter / 2) {
+      hasReachedStartingPoint = true
+      scoreSFX.play()
+    }
+  }
+
+  function checkSquares () {
+    for (let i = squares.length - 1; i >= 0; i--) {
+      let square = squares[i]
+      let distToSquare = dist(noseX, noseY, square.x + square.width / 2, square.y + square.width / 2)
+
+      if (distToSquare < square.width / 2) {
+        squares.splice(i, 1) // Remove square
+        score++
+        scoreSFX.play()
+      }
+    }
+  }
 }
 
-function drawCircleAndText () {
+function drawText () {
+  select('#score').html('Score: ' + score)
+
+  select('#debug').html(`
+    Nose Position: (${noseX.toFixed(2)}, ${noseY.toFixed(2)})
+  `)
+}
+
+function drawStartingCircle () {
   noFill()
   stroke(255)
   push()
   strokeWeight(4)
-  ellipse(circleX, circleY, 50, 50) // Draw circle at left side
+  ellipse(circleX, circleY, circleDiameter, circleDiameter)
   pop()
 
-  push()
-  strokeWeight(1)
-  fill(255)
-  textAlign(CENTER)
-  textSize(16)
-  text("Come here to start", circleX, circleY - 40) // Draw text above the circle
-  pop()
+  // push()
+  // strokeWeight(1)
+  // fill(255)
+  // textAlign(CENTER)
+  // textSize(16)
+  // text("Come here to start", circleX, circleY - circleDiameter)
+  // pop()
 }
 
 function drawKeypoints () {
+  noseHue = (noseHue + 1) % 360 // Cycle hue between 0-360
+  let [r, g, b] = hslToRgb(noseHue, noseSaturation, noseLightness)
+
   for (let i = 0; i < min(poses.length, 1); i++) {
     for (let j = 0; j < poses[i].pose.keypoints.length; j++) {
       let keypoint = poses[i].pose.keypoints[j]
       if (keypoint.score > 0.2) {
         if (j == 0) { // We only care about the nose keypoint
-          noseX = keypoint.position.x
-          noseY = keypoint.position.y
-
-          // Check distance to the circle
-          let d
-          if (enableHorizontalMirror) {
-            d = dist(width - noseX, noseY, circleX, circleY) // Adjust for mirrored video
+          if (!enableHorizontalMirror) {
+            noseX = keypoint.position.x
+            noseY = keypoint.position.y
           } else {
-            d = dist(noseX, noseY, circleX, circleY)
-          }
-          if (d < circleRadius) {
-            stopDrawingKeypoints = true // Stop drawing keypoints if within radius
-            console.log('reached circle')
+            noseX = width - keypoint.position.x
+            noseY = keypoint.position.y
           }
 
-          pg.stroke(230, 80, 0)
-          pg.strokeWeight(5)
-          // Draw line only if this is not the first detection
+          pg.stroke(r, g, b)
+          pg.strokeWeight(noseStrokeWeight)
+
           if (pNoseX !== 0 && pNoseY !== 0) {
             pg.line(noseX, noseY, pNoseX, pNoseY)
           }
-          pNoseX = noseX // Update previous nose positions
+          pNoseX = noseX
           pNoseY = noseY
         }
       }
@@ -117,10 +169,78 @@ function drawKeypoints () {
 }
 
 function keyPressed () {
+  if (key === 's') {
+    saveCanvas(cvs, 'output', 'png')
+  }
+
+  if (key === 'r') {
+    ResetGame()
+    pauseGame = false
+  }
+
+  if (key === 'm') {
+    enableHorizontalMirror = !enableHorizontalMirror
+  }
+
+  // if space or P, then pause
+  if (key === ' ' || key === 'p') {
+    pauseGame = true
+  }
+}
+
+function ResetGame () {
+  score = 0
+  hasReachedStartingPoint = false
+
+  noseX = 0
+  noseY = 0
+  pNoseX = 0
+  pNoseY = 0
+
   pg.clear()
-  stopDrawingKeypoints = false // Reset drawing when key is pressed
 }
 
 function modelReady () {
-  select('#status').html('model Loaded')
+  console.log('Model ready!')
+}
+
+// Square class definition
+class Square {
+  constructor (x, y, w) {
+    this.x = x // Start position
+    this.y = y // Y position
+    this.width = w // Width of the square
+  }
+
+  update () {
+    this.x -= squareSpeed // Move square left
+  }
+
+  display () {
+    fill(255)
+    noStroke()
+    rect(this.x, this.y, this.width, this.width) // Draw square
+  }
+}
+
+// Function to randomly instantiate squares
+function instantiateSquare () {
+  if (frameCount % squareInterval === 0) { // Adjust this value to control frequency
+    squares.push(new Square(width, random(height - squareWidth), squareWidth))
+  }
+}
+
+// Function to update and display squares
+function drawSquares () {
+  instantiateSquare() // Call the instantiate function
+
+  for (let i = squares.length - 1; i >= 0; i--) {
+    squares[i].update()
+    squares[i].display()
+
+    // Remove squares that have gone off-screen
+    if (squares[i].x < -squareWidth) {
+      squares.splice(i, 1)
+    }
+  }
 }
