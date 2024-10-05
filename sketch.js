@@ -92,7 +92,8 @@ function draw () {
 
   drawKeypoints()
   handlePos()
-  drawText()
+
+  updateHTML()
 }
 
 
@@ -124,11 +125,8 @@ function handlePos () {
   }
 }
 
-function drawText () {
-  let scoreElement = select('#score')
-  if (scoreElement) {
-    scoreElement.html('Score: ' + score)
-  }
+function updateHTML () {
+  select('#score')?.html('Score: ' + score)
 }
 
 function drawStartingCircle () {
@@ -233,21 +231,9 @@ function onModelLoaded () {
   console.log('Model loaded!')
   isModelLoaded = true
 
-  // for html #score and #keymap, rm class .hide, add class .show
-  let scoreElement = select('#score')
-  if (scoreElement) {
-    scoreElement.class('show')
-  }
-
-  let keymapElement = select('#keymap')
-  if (keymapElement) {
-    keymapElement.class('show')
-  }
-
-  let loaddingElement = select('#loading')
-  if (loaddingElement) {
-    loaddingElement.class('hide')
-  }
+  select('#score')?.class('show')
+  select('#keymap')?.class('show')
+  select('#loading')?.class('hide')
 }
 class Square {
   constructor (x, y, w) {
