@@ -37,9 +37,9 @@ let music
 
 function preload () {
   soundFormats('mp3')
-  // scoreSFX = loadSound('./assets/SFXfinish.mp3')
   music = loadSound('./assets/music.mp3')
   scoreSFX = loadSound('./assets/SFXmistake.mp3')
+  // scoreSFX = loadSound('./assets/SFXfinish.mp3')
   music.setVolume(0.25)
   scoreSFX.setVolume(1)
 }
@@ -66,6 +66,14 @@ function setup () {
 }
 
 function draw () {
+  if (!isModelLoaded) return
+
+  if (pauseGame) {
+    background(255)
+    image(pg, 0, 0, width, height)
+    return
+  }
+
   if (enableHorizontalMirror) {
     push()
     scale(-1, 1)
@@ -75,12 +83,7 @@ function draw () {
     image(video, 0, 0, width, height)
   }
 
-  if (!isModelLoaded) return
-
   image(pg, 0, 0, width, height)
-  drawText()
-
-  if (pauseGame) return
 
   if (!hasReachedStartingPoint)
     drawStartingCircle()
@@ -89,7 +92,9 @@ function draw () {
 
   drawKeypoints()
   handlePos()
+  drawText()
 }
+
 
 function handlePos () {
   // Check distance to the circle
@@ -101,7 +106,7 @@ function handlePos () {
     if (d < circleDiameter / 2) {
       hasReachedStartingPoint = true
       // scoreSFX.play()
-      music.loop()
+      if (!music.isPlaying()) music.loop()
     }
   }
 
@@ -184,19 +189,24 @@ function drawKeypoints () {
 function keyPressed () {
   if (key === 's') {
     saveCanvas(cvs, 'output', 'png')
+    // if (pauseGame) togglePause()
   }
 
-  if (key === 'r') {
-    ResetGame()
-    pauseGame = false
+  if (key === ' ') {
+    togglePause()
   }
 
   if (key === 'm') {
     enableHorizontalMirror = !enableHorizontalMirror
   }
+}
 
-  // if space or P, then pause
-  if (key === ' ' || key === 'p') {
+function togglePause () {
+  if (pauseGame) {
+    ResetGame()
+    pauseGame = false
+  }
+  else {
     pauseGame = true
   }
 }
@@ -205,6 +215,10 @@ function ResetGame () {
   score = 0
   hasReachedStartingPoint = false
 
+  // Reset squares
+  squares = []
+
+  // Reset nose
   noseX = 0
   noseY = 0
   pNoseX = 0

@@ -13,6 +13,7 @@ canvas {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  z-index: 0;
 }
 
 #score {
@@ -23,6 +24,7 @@ canvas {
   font-size: 20px;
   text-align: center;
   font-weight: bold;
+  z-index: 9999;
 }
 
 #debug {
@@ -32,6 +34,7 @@ canvas {
   transform: translateX(-50%);
   font-size: 20px;
   text-align: center;
+  z-index: 9999;
   display: none;
 }
 
@@ -41,5 +44,6 @@ canvas {
   left: 50%;
   transform: translateX(-50%);
   font-size: 20px;
-  text-align: center;
+  /* text-align: center; */
+  z-index: 9999;
 }
