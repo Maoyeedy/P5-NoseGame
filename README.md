@@ -1,5 +1,5 @@
 # [🎮 Play the Game!](https://maoyeedy.github.io/P5-NoseGame/)
-# [📽️ Video Link](https://www.youtube.com/watch?v=V92UPdkPQYI)
+[![YouTube](http://i.ytimg.com/vi/qAHqHwO1I5M/hqdefault.jpg)](https://www.youtube.com/watch?v=qAHqHwO1I5M)
 
 <!-- ![Screenshot](./public/screenshot.webp) -->
 
