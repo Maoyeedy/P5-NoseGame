@@ -21,15 +21,15 @@ let circleY
 // Squares
 let score = 0
 let squares = []
-const squareSpeed = 3
+const squareSpeed = 2.5
 const squareWidth = 40
-const squareInterval = 45
+const squareInterval = 60
 
 // Nose Point
 let noseHue = 210
 let noseSaturation = 100
 let noseLightness = 50
-let noseStrokeWeight = 6
+let noseStrokeWeight = 4
 
 // Assets
 let scoreSFX
